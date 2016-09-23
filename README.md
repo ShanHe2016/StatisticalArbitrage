@@ -1,6 +1,6 @@
 # Application of Machine Learning Techniques in Statistical Arbitrage
 
-Team Members: 
+### Team Members: 
 
 Shan He(sh2375), 
 Sheng Zhang(sz465), 
