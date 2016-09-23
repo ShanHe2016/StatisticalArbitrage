@@ -2,8 +2,8 @@
 
 Team Members: 
 
-Shan He(sh2375)
-Sheng Zhang(sz465)
+Shan He(sh2375), 
+Sheng Zhang(sz465), 
 Zicheng Men(zm223)
 
 Project Description:
