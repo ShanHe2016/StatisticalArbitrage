@@ -1,0 +1,178 @@
+\documentclass[letterpaper,12pt]{article}
+\setlength{\oddsidemargin}{0.2in}
+\setlength{\textwidth}{16.2cm}
+\setlength{\topmargin}{-0.8in}
+\setlength{\textheight}{9in}
+\setlength{\parskip}{1em}
+\setlength{\baselineskip}{15pt}
+\setlength{\parindent}{12pt}
+\setlength{\skip\footins}{0.8cm} % space between text body and footnote
+\usepackage{indentfirst}
+\usepackage{amsfonts,amsmath,verbatim,graphicx, subfigure,longtable}
+\usepackage{amssymb,amsthm,amscd}
+%\usepackage{pdfsync}
+%\usepackage{hyperref}
+\usepackage[pdfstartview=FitH,bookmarks=false,unicode=false,pdftoolbar=true,pdfmenubar=true,]{hyperref}
+\usepackage{pstricks}
+\usepackage{epstopdf}
+\usepackage{color}
+\usepackage{transparent}
+\usepackage{tikz}
+\usepackage{subfigure}
+\usepackage[font=small,labelfont=bf]{caption}
+
+\usetikzlibrary{fit, positioning}
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{definition}[thm]{Definition}
+\newtheorem{assumption}[thm]{Assumption}
+\newtheorem{conjecture}[thm]{Conjecture}
+\newtheorem{claim}[thm]{Claim}
+\newtheorem{open}[thm]{Open Problem}
+\newtheorem{example}[thm]{Example}
+\newtheorem{remark}[thm]{Remark}
+\newcommand{\qn}{\noindent{\bf Question: \,}}
+\newenvironment{pf}{\noindent\emph{Proof \,}}{\mbox{}\qed}
+
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\supp}{\operatorname{supp}}
+\newcommand{\toL}{\,{\buildrel \mathcal{L} \over \longrightarrow}\,}
+\newcommand{\equalL}{\,{\buildrel \mathcal{L} \over =}\,}
+
+\def\wh{\widehat}
+
+\numberwithin{equation}{section}
+\def\AA{{\mathbb A}}     % State space
+\def\R{{\mathbb R}}     % Real numbers
+\def\Z{{\mathbb Z}}     % Integers
+\def\P{{\mathbb P}}     % Probability
+\def\Q{{\mathbb Q}}     % Probability
+\def\E{{\mathbb E}}     % Expectation
+\def\D{{\mathcal E}}    % Dirichlet form
+\def\F{{\mathcal F}}    % Domain of Dirichlet form
+\def\G{{\mathcal G}}    % Domain of Dirichlet form
+\def\H{{\mathcal H}}    %
+\newcommand{\PP}{\mathbf{P}}
+\newcommand{\EE}{\mathbf{E}}
+
+\def\X{{\mathfrak X}}   % Empirical process
+\def\Y{{\mathcal Y}}   % Fluctuation process
+
+\def\bX{{\bar{\mathfrak X}}}   % Empirical_\bar{X} for RBMs without annihilation
+\def\bY{{\bar{\mathcal Y}}}   % Fluctuation_\bar{Y} for RBMs without annihilation
+\def\ZZ{{\mathcal Z}}
+\def\A{{\mathcal A}}   % Generator of a reflected diffusion
+\def\L{{\mathfrak L}}   % Generator of \eta
+
+\def\eps{\varepsilon}
+\def\<{{\langle}}
+\def\>{{\rangle}}
+\def\1{{\bf 1}}         % Indicator
+
+\newcommand{\ip}[1]{\langle #1 \rangle}
+\newcommand{\TODO}[1]{\textbf{#1}}
+\renewcommand{\bar}{\overline}
+\renewcommand{\abstractname}{Executive Summary}
+\begin{document}
+\allowdisplaybreaks
+
+
+\title{\Large \bf
+ORIE 4741 Course Project Midterm Report\\
+Application of Machine Learning Techniques in Statistical Arbitrage
+}
+\author{{\bf Zicheng Men, Sheng Zhang, Shan He}}
+\date{October 27 2016}
+\maketitle
+
+\section{Project Framework}
+The purpose of this project is to develop a trading strategy that tracks arbitrage opportunities in a stock index. The net present value (NPV) of a stock index is computed from the weighted average of the prices of selected stocks. On the other hand, the actual trading price of the ETF (exchange traded fund) of this index is determined by the relationship between supply and demand of the market. Therefore the discrepancy between its NPV and actual trading price creates arbitrage opportunities. It is commonly practiced to use constituents of an index to predict the index fluctuation. According to empirical studies, the fluctuation of each stock price can be decomposed into systematic fluctuation, which is due to the momentum of the industry, and idiosyncratic fluctuation, which is irrelevent of the industry.
+
+We will employ linear regression and support vector regression onto the constituents of the index. In order to prevent overfitting, we use Principal Component Analysis (PCA) to reduce the dimensions of the feature space.
+
+We want to model the price of the index such that it accounts for a drift, which measures systematic deviations from the market, and a price fluctuation that is a mean-reverting Ornstein Uhlenbeck process to the overall industry level. We represent the idiosyncratic fluctuation by the generalization errors from regression on principal components to generate trading signals. 
+
+\section{Data Selection}
+
+S\&P 100 index and the adjusted close prices of its constituents are our primary data in this project. We download the data from Yahoo Finance using R. S\&P 100 index is a stock market index which is composed of 102 leading US stocks, including Apple, Microsoft, etc. We use adjusted close prices of 101 out of 102 stocks in S\&P 100 index as our features. We exclude one of the stocks because it has missing data from April to June. We only use 102 days from April. 11, 2016 to Sep. 2, 2016 as our samples because given 101 feature variables, we need at least 102 observations to train the 102 parameters (for adding offset model) in the linear regression model. Our output is adjusted close price of iShares S\&P 100 ETF from the corresponding period.
+
+To begin with, we do a basic linear regression using least squares (LS) fitting. The empirical error on the 101 constituents over 102 training days is around $10^{-3}$. Then we improve our model by adding offset and standardizing features to input data. 
+
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.3\textwidth}
+		\centering
+		\includegraphics  [width=2in,height=1.3in] {1.jpg}
+		\caption{Empirical error without offset}
+		\label{1}
+	\end{minipage}
+	\begin{minipage}{0.3\textwidth}
+		\includegraphics [width=2in,height=1.3in]{2.jpg}
+		\caption{Empirical error with offset}
+		\label{2}
+	\end{minipage}
+	\begin{minipage}{0.3\textwidth}
+		\includegraphics [width=2in,height=1.3in]{3.jpg}
+		\caption{Empirical error standardization and offset}
+		\label{3}
+	\end{minipage}
+\end{figure}
+
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.3\textwidth}
+		\centering
+		\includegraphics [width=2in,height=1.3in]{4.jpg}
+		\caption{Generalization error without offset}
+		\label{4}
+	\end{minipage}
+	\begin{minipage}{0.3\textwidth}
+		\includegraphics [width=2in,height=1.3in]{6.jpg}
+		\caption{Generalization error with offset}
+		\label{5}
+	\end{minipage}
+	\begin{minipage}{0.3\textwidth}
+		\includegraphics [width=2in,height=1.3in]{5.jpg}
+		\caption{Gen. error standardization and offset}
+		\label{6}
+	\end{minipage}
+\end{figure}
+
+From Figures \ref{1} \ref{2} and \ref{3}, we observe that the empirical errors of three models are acceptable (at the levels of $10^{-3}$, $10^{-13}$, $10^{-15}$ respectively). However, when we test this linear model using 39 examples that are not in the training set, i.e. adjusted close prices of each stock from Sep. 5, 2016 to Oct. 27, 2016, the generalization errors of the three models are far from satisfactory, as shown in Figures \ref{4} \ref{5} and \ref{6}. 
+
+This implies that we are facing an overfitting problem, even though we’ve used the smallest possible training set. There are too many parameters in the linear model, which gets us into this problem. Hence, we apply Principal Component Analysis (PCA) to reduce the dimension of the model on the basis of the feature-standardized model, which has smallest empirical and generalization errors.
+
+\section{Principal Component Analysis}
+	We apply PCA to reduce the feature dimensions. We use the previous 102 training days to estimate the correlation matrix of 101 features. Since PCA exports the principal components in the descending significance order, we compute the eigenvalues of the correlation matrix (Figure \ref{7}) and observe that the first 20 eigenvalues reveal almost all information of the correlation matrix. 
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=3in,height=1.8in]{7.jpg}
+  \caption{Eigenvalues of correlation matrix}
+  \label{7}
+\end{figure}
+
+By comparing the empirical errors of model with first one principal component (PC), first two PC, …, and first 15 PC, we choose first 14 PC as the features of the new model since the first 14 has the least errors from both training set and testing set. And we will use the errors of the regression of the first 14 PC to generate trading signals.
+
+\begin{figure}[htbp]
+	\centering
+	\begin{minipage}{0.45\textwidth}
+		\includegraphics [width=3in,height=1.8in]{8.jpg}
+		\caption{Empirical errors of first 14 PC}
+		\label{8}
+	\end{minipage}
+	\begin{minipage}{0.45\textwidth}
+		\includegraphics [width=3in,height=1.8in]{9.jpg}
+		\caption{Gen. error of first 14 PC}
+		\label{9}
+	\end{minipage}
+\end{figure}
+
+\section{Future Plan}
+	We will try different methods to construct a model for the errors, which is interpreted as the idiosyncratic fluctuations in the prices, to determine the patterns of the error. And we will generate a statistics of errors as the signal to start or end trade. Eventually, the accuracy of model and the efficiency of the arbitrage strategy will be tested.
+
+
+\end{document}
